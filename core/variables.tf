@@ -1,9 +1,17 @@
 variable "username" {
-  default = "dhomich"
+  default = "atsoy"
 }
 
 variable "product_name" {
-  default = "altdata2"
+  default = "core"
+}
+
+variable "count_managers" {
+  default = 0
+}
+
+variable "count_workers" {
+  default = 0
 }
 
 variable "vm_size" {

@@ -87,7 +87,7 @@ module "manager" {
   source = "./manager"
 
   name                = "manager-${var.product_name}-${var.username}"
-  count_managers      = "1"
+  count_managers      = "${var.count_managers}"
 
   vm_size             = "${var.vm_size}"
   image_sku           = "${var.image_sku}"
@@ -116,7 +116,7 @@ module "worker" {
   source = "./worker"
 
   name                = "worker-${var.product_name}-${var.username}"
-  count_managers      = "2"
+  count_managers      = "${var.count_workers}"
 
   vm_size             = "${var.vm_size}"
   image_sku           = "${var.image_sku}"
