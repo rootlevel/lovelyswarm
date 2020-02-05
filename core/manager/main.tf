@@ -102,4 +102,9 @@ resource "azurerm_virtual_machine" "common" {
   os_profile_linux_config {
     disable_password_authentication = false
   }
+
+  provisioner "file" {
+    source      = "config/ntp-server.yml.tpl"
+    destination = "/tmp/ntp-config.conf"
+  }
 }

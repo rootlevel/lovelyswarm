@@ -4,6 +4,7 @@ package_upgrade: true
 
 packages:
    - docker.io
+   - ntp
 
 users:
   - default
