@@ -103,8 +103,17 @@ resource "azurerm_virtual_machine" "common" {
     disable_password_authentication = false
   }
 
+  # For sync time in all hosts
   provisioner "file" {
-    source      = "config/ntp-server.yml.tpl"
-    destination = "/tmp/ntp-config.conf"
+    source      = "config/ntp.conf"
+    destination = "/tmp/ntp.conf"
+
+    connection {
+      type     = "ssh"
+      user     = "${var.username}"
+      password = "${var.pwd}"
+      host     = "${element(azurerm_public_ip.common[*].ip_address, count.index)}"
+    }
   }
+
 }

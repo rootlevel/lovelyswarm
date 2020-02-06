@@ -19,3 +19,6 @@ runcmd:
  - sudo usermod -aG docker deployman
  - sudo systemctl enable docker
  - sudo systemctl restart docker
+ - sudo cat /tmp/ntp.conf > /etc/ntp.conf & sudo systemctl start ntp & sudo systemctl enable ntp
+ - ntpdate -u 0.pool.ntp.org
+ - hwclock --systohc
