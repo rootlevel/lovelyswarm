@@ -1,9 +1,9 @@
 variable "username" {
-  default = "atsoy"
+  default = "defimova"
 }
 
 variable "product_name" {
-  default = "core"
+  default = "lrepo"
 }
 
 variable "count_managers" {
@@ -14,8 +14,11 @@ variable "count_workers" {
   default = 0
 }
 
+variable "tag" {
+  default = ""
+}
+
 variable "vm_size" {
-  description = "VMs size"
   default     = "Standard_A3"
 }
 
@@ -24,18 +27,15 @@ variable "location" {
 }
 
 variable "image_sku" {
-  description = "image sku (az vm image list)"
-  default     = "18.04-LTS"
+  default     = "7.5"
 }
 
 variable "image_offer" {
-  description = "Server type (az vm image list)"
-  default     = "UbuntuServer"
+  default     = "CentOS"
 }
 
 variable "image_publisher" {
-  description = "Publisher of the image (az vm image list)"
-  default     = "Canonical"
+  default     = "OpenLogic"
 }
 
 variable "ssh_port" {

@@ -1,7 +1,7 @@
 locals {
   vnet_address_prefix   = "10.0.0.0/16"
   subnet_address_prefix = "10.0.0.0/24"
-  tags = {"test" = "qa"}
+  tags = {"indicate" = "${var.tag}"}
 }
 
 resource "azurerm_resource_group" "common" {

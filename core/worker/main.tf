@@ -28,7 +28,7 @@ resource "azurerm_network_security_group" "common" {
   }
 
   tags = {
-    environment = "atsoy"
+    environment = "lrepo"
   }
 }
 
@@ -89,7 +89,7 @@ resource "azurerm_virtual_machine" "common" {
     managed_disk_type = "${var.storage_type}"
     create_option     = "Empty"
     lun               = 0
-    disk_size_gb      = "30"
+    disk_size_gb      = "160"
   }
 
   os_profile {
