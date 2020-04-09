@@ -4,6 +4,9 @@
 # Credentials
 core/init.sh
 
+# Plans
+core/*.plan
+
 
 # Local .terraform directories
 **/.terraform/*
@@ -11,6 +14,8 @@ core/init.sh
 # .tfstate files
 *.tfstate
 *.tfstate.*
+*.state.*
+*.state
 
 # Crash log files
 crash.log
