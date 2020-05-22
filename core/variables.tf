@@ -1,9 +1,9 @@
 variable "username" {
-  default = "rootlevel"
+  default = "noname"
 }
 
 variable "product_name" {
-  default = "rootlevel_swarm"
+  default = "noname"
 }
 
 variable "count_managers" {
@@ -15,7 +15,7 @@ variable "count_workers" {
 }
 
 variable "tag" {
-  default = "rootlevel"
+  default = "noname"
 }
 
 variable "vm_size" {

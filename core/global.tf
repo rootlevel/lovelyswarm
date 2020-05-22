@@ -189,8 +189,8 @@ data "template_file" "inventory" {
 
 
   vars = {
-    managers = "${join("\n", module.manager.myips)}"
-    workers  = "${join("\n", module.worker.myips)}"
+    managers = "${join("\n", module.manager.manager_ips)}"
+    workers  = "${join("\n", module.worker.worker_ips)}"
   }
 }
 
