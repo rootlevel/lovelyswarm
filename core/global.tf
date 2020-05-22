@@ -4,6 +4,10 @@ locals {
   tags = {"indicate" = "${var.tag}"}
 }
 
+provider "azurerm" {
+   features {}
+}
+
 resource "azurerm_resource_group" "common" {
  name     = "rg-dev-${var.product_name}-${var.username}"
  location = "westeurope"
@@ -11,8 +15,8 @@ resource "azurerm_resource_group" "common" {
 
 resource "azurerm_availability_set" "common" {
  name                         = "avset-dev-${var.product_name}-${var.username}"
- location                     = "${azurerm_resource_group.common.location}"
- resource_group_name          = "${azurerm_resource_group.common.name}"
+ location                     = azurerm_resource_group.common.location
+ resource_group_name          = azurerm_resource_group.common.name
  platform_fault_domain_count  = 1
  platform_update_domain_count = 1
  managed                      = true
@@ -25,8 +29,8 @@ resource "random_string" "password" {
 
 resource "random_id" "pseudo" {
   keepers = {
-    resource_group = "${azurerm_resource_group.common.name}"
-    location       = "${azurerm_resource_group.common.location}"
+    resource_group = azurerm_resource_group.common.name
+    location       = azurerm_resource_group.common.location
   }
   byte_length = 4
 }
@@ -34,24 +38,64 @@ resource "random_id" "pseudo" {
 resource "azurerm_virtual_network" "common" {
  name                = "vnet-dev-${var.product_name}-${var.username}"
  address_space       = ["${local.vnet_address_prefix}"]
- location            = "${azurerm_resource_group.common.location}"
- resource_group_name = "${azurerm_resource_group.common.name}"
+ location            = azurerm_resource_group.common.location
+ resource_group_name = azurerm_resource_group.common.name
 }
 
 resource "azurerm_subnet" "common" {
  name                 = "snet-dev-${var.product_name}-${var.username}"
- resource_group_name  = "${azurerm_resource_group.common.name}"
- virtual_network_name = "${azurerm_virtual_network.common.name}"
- address_prefix       = "${local.subnet_address_prefix}"
+ resource_group_name  = azurerm_resource_group.common.name
+ virtual_network_name = azurerm_virtual_network.common.name
+ address_prefix       = local.subnet_address_prefix
 }
+
+resource "azurerm_network_security_group" "common" {
+  name                         = "nsg-dev-${var.product_name}-${var.username}"
+  location                     = azurerm_resource_group.common.location
+  resource_group_name          = azurerm_resource_group.common.name
+
+  security_rule {
+    name                       = "Port_HOME_IN"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "0-65535"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Port_HOME_OUT"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "0-65535"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    environment = "lrepo"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "common" {
+  subnet_id                 = azurerm_subnet.common.id
+  network_security_group_id = azurerm_network_security_group.common.id
+}
+
 
 resource "azurerm_storage_account" "diagnostics" {
   name                     = "swarmdiagnostics${random_id.pseudo.hex}"
-  location                 = "${azurerm_resource_group.common.location}"
-  resource_group_name      = "${azurerm_resource_group.common.name}"
+  location                 = azurerm_resource_group.common.location
+  resource_group_name      = azurerm_resource_group.common.name
   account_replication_type = "LRS"
   account_tier             = "Standard"
-  tags                     = "${local.tags}"
+  tags                     = local.tags
 }
 
 
@@ -145,10 +189,11 @@ data "template_file" "inventory" {
 
 
   vars = {
-    managers = "${join("\n", module.manager.myips)}"
-    workers  = "${join("\n", module.worker.myips)}"
+    managers = "${join("\n", module.manager.manager_ips)}"
+    workers  = "${join("\n", module.worker.worker_ips)}"
   }
 }
+
 
 
 

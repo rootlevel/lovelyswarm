@@ -1,63 +1,63 @@
 variable "name" {
-  type = "string"
+  type = string
 }
 
 variable "count_managers" {
-  type = "string"
+  type = string
 }
 
 variable "username" {
-  type = "string"
+  type = string
 }
 
 variable "pwd" {
-  type = "string"
+  type = string
 }
 
 variable "cloud_config" {
-  type = "string"
+  type = string
 }
 
 variable "location" {
-  type = "string"
+  type = string
 }
 
 variable "resource_group_name" {
-  type = "string"
+  type = string
 }
 
 variable "availability_set_id" {
-  type = "string"
+  type = string
 }
 
 variable "subnet_id" {
-  type = "string"
+  type = string
 }
 
 variable "storage_type" {}
 
 variable "tags" {
-  type = "map"
+  type = map
 }
 
 variable "ssh_key" {}
 
 variable "ssh_port" {
-  default = "22"
+  default = 22
 }
 
 variable "vm_size" {
-  type = "string"
+  type = string
 }
 
 variable "image_sku" {
-  type = "string"
+  type = string
 }
 
 variable "image_offer" {
-  type = "string"
+  type = string
 }
 
 variable "image_publisher" {
-  type = "string"
+  type = string
 }
