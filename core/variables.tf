@@ -43,7 +43,7 @@ variable "ssh_port" {
 }
 
 variable "ssh_key" {
-  type = "string"
+  type = string
 }
 
 variable "storage_type" {

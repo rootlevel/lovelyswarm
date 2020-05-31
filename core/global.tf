@@ -1,6 +1,6 @@
 locals {
   vnet_address_prefix   = "10.0.0.0/16"
-  subnet_address_prefix = "10.0.0.0/24"
+  subnet_address_prefix = ["10.0.0.0/24"]
   tags = {"indicate" = "${var.tag}"}
 }
 
@@ -46,47 +46,9 @@ resource "azurerm_subnet" "common" {
  name                 = "snet-dev-${var.product_name}-${var.username}"
  resource_group_name  = azurerm_resource_group.common.name
  virtual_network_name = azurerm_virtual_network.common.name
- address_prefix       = local.subnet_address_prefix
+ address_prefixes      = local.subnet_address_prefix
 }
 
-resource "azurerm_network_security_group" "common" {
-  name                         = "nsg-dev-${var.product_name}-${var.username}"
-  location                     = azurerm_resource_group.common.location
-  resource_group_name          = azurerm_resource_group.common.name
-
-  security_rule {
-    name                       = "Port_HOME_IN"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "0-65535"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "Port_HOME_OUT"
-    priority                   = 100
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "0-65535"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  tags = {
-    environment = "lrepo"
-  }
-}
-
-resource "azurerm_subnet_network_security_group_association" "common" {
-  subnet_id                 = azurerm_subnet.common.id
-  network_security_group_id = azurerm_network_security_group.common.id
-}
 
 
 resource "azurerm_storage_account" "diagnostics" {
