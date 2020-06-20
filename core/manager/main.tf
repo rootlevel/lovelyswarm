@@ -1,42 +1,3 @@
-resource "azurerm_network_security_group" "common" {
-  name                         = var.name
-  location                     = var.location
-  resource_group_name          = var.resource_group_name
-
-  security_rule {
-    name                       = "Port_OFFICE_IN"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "0-65535"
-    source_address_prefix      = "185.9.230.77"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "Port_OFFICE_OUT"
-    priority                   = 100
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "0-65535"
-    source_address_prefix      = "185.9.230.77"
-    destination_address_prefix = "*"
-  }
-
-  tags = {
-    environment = "lrepo"
-  }
-}
-
-resource "azurerm_subnet_network_security_group_association" "manager_common" {
-  subnet_id                 = var.subnet_id
-  network_security_group_id = azurerm_network_security_group.common.id
-}
-
 resource "azurerm_public_ip" "common" {
   count                        = var.count_managers
   name                         = "pip-dev-${var.username}-manager-counter${count.index}"
@@ -100,14 +61,13 @@ resource "azurerm_virtual_machine" "common" {
     computer_name  = "${var.username}-manager-common-env"
     admin_username = var.username
     admin_password = var.pwd
-    custom_data    = var.cloud_config
   }
 
   os_profile_linux_config {
     disable_password_authentication = false
   }
 
-  # For sync time in all hosts
+  # For sync time in all hosts (legacy!)
   provisioner "file" {
     source      = "config/ntp.conf"
     destination = "/tmp/ntp.conf"

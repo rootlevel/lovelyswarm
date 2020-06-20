@@ -10,5 +10,8 @@ output "worker_passwd" {
   value = var.pwd
 }
 
+output "worker_host" {
+  value = azurerm_virtual_machine.common.*.name
+}
 
 

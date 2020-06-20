@@ -50,6 +50,45 @@ resource "azurerm_subnet" "common" {
 }
 
 
+resource "azurerm_network_security_group" "common" {
+  name                         = "nsg-${var.product_name}-${var.username}"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.common.name
+
+  security_rule {
+    name                       = "Port_OFFICE_IN"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "0-65535"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Port_OFFICE_OUT"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "0-65535"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    environment = "lrepo"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "manager_common" {
+  subnet_id                 = azurerm_subnet.common.id
+  network_security_group_id = azurerm_network_security_group.common.id
+}
+
 
 resource "azurerm_storage_account" "diagnostics" {
   name                     = "swarmdiagnostics${random_id.pseudo.hex}"
@@ -63,57 +102,30 @@ resource "azurerm_storage_account" "diagnostics" {
 
 #--- Importing module with VM creation ---
 
-data "template_file" "client_config" {
-  template = "${file("${path.module}/config/cloudconfig.yml.tpl")}"
-}
-
-data "template_cloudinit_config" "config" {
-  gzip          = true
-  base64_encode = true
-
-  # Main cloud-config configuration file.
-  part {
-    filename     = "cloudconfig.yml.tpl"
-    content_type = "text/cloud-config"
-    content      = "${data.template_file.client_config.rendered}"
-  }
-
-  part {
-    content_type = "text/x-shellscript"
-    content      = "baz"
-  }
-
-  part {
-    content_type = "text/x-shellscript"
-    content      = "ffbaz"
-  }
-}
-
 module "manager" {
   source = "./manager"
 
   name                = "manager-${var.product_name}-${var.username}"
-  count_managers      = "${var.count_managers}"
+  count_managers      = var.count_managers
 
-  vm_size             = "${var.vm_size}"
-  image_sku           = "${var.image_sku}"
-  image_offer         = "${var.image_offer}"
-  image_publisher     = "${var.image_publisher}"
+  vm_size             = var.vm_size
+  image_sku           = var.image_sku
+  image_offer         = var.image_offer
+  image_publisher     = var.image_publisher
 
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.common.name}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.common.name
 
-  username            = "${var.username}"
-  pwd                 = "${random_string.password.result}"
-  ssh_key             = "${var.ssh_key}"
-  ssh_port            = "${var.ssh_port}"
+  username            = var.username
+  pwd                 = random_string.password.result
+  ssh_key             = var.ssh_key
+  ssh_port            = var.ssh_port
 
-  availability_set_id = "${azurerm_availability_set.common.id}"
+  availability_set_id = azurerm_availability_set.common.id
 
-  subnet_id           = "${azurerm_subnet.common.id}"
-  storage_type        = "${var.storage_type}"
-  tags                = "${local.tags}"
-  cloud_config        = "${base64encode(data.template_file.client_config.rendered)}"
+  subnet_id           = azurerm_subnet.common.id
+  storage_type        = var.storage_type
+  tags                = local.tags
 }
 
 
@@ -122,38 +134,41 @@ module "worker" {
   source = "./worker"
 
   name                = "worker-${var.product_name}-${var.username}"
-  count_managers      = "${var.count_workers}"
+  count_managers      = var.count_workers
 
-  vm_size             = "${var.vm_size}"
-  image_sku           = "${var.image_sku}"
-  image_offer         = "${var.image_offer}"
-  image_publisher     = "${var.image_publisher}"
+  vm_size             = var.vm_size
+  image_sku           = var.image_sku
+  image_offer         = var.image_offer
+  image_publisher     = var.image_publisher
 
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.common.name}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.common.name
 
-  username            = "${var.username}"
-  pwd                 = "${random_string.password.result}"
-  ssh_key             = "${var.ssh_key}"
-  ssh_port            = "${var.ssh_port}"
+  username            = var.username
+  pwd                 = random_string.password.result
+  ssh_key             = var.ssh_key
+  ssh_port            = var.ssh_port
 
-  availability_set_id = "${azurerm_availability_set.common.id}"
+  availability_set_id = azurerm_availability_set.common.id
 
-  subnet_id           = "${azurerm_subnet.common.id}"
-  storage_type        = "${var.storage_type}"
-  tags                = "${local.tags}"
-  cloud_config        = "${base64encode(data.template_file.client_config.rendered)}"
+  subnet_id           = azurerm_subnet.common.id
+  storage_type        = var.storage_type
+  tags                = local.tags
 }
 
 
 data "template_file" "inventory" {
-  template = "${file("config/inventory.yml.tpl")}"
-
+  template = file("config/inventory.yml.tpl")
 
   vars = {
-    managers = "${join("\n", module.manager.manager_ips)}"
-    workers  = "${join("\n", module.worker.worker_ips)}"
+    managers = join("\n", formatlist("manager_%s ansible_port=22 ansible_host=%s", module.manager.manager_host, module.manager.manager_ips))
+    workers  = join("\n", formatlist("worker_%s ansible_port=22 ansible_host=%s", module.worker.worker_host, module.worker.worker_ips))
   }
+}
+
+resource "local_file" "hosts" {
+  content  = data.template_file.inventory.rendered
+  filename = "host.cfg"
 }
 
 

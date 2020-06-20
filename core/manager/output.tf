@@ -9,3 +9,7 @@ output "manager_username" {
 output "manager_passwd" {
   value = var.pwd
 }
+
+output "manager_host" {
+  value = azurerm_virtual_machine.common.*.name
+}

@@ -14,10 +14,6 @@ variable "pwd" {
   type = string
 }
 
-variable "cloud_config" {
-  type = string
-}
-
 variable "location" {
   type = string
 }
