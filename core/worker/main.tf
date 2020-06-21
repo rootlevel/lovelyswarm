@@ -33,7 +33,6 @@ resource "azurerm_virtual_machine" "common" {
   delete_os_disk_on_termination = true
   delete_data_disks_on_termination = true
 
-
   storage_image_reference {
     publisher = var.image_publisher
     offer     = var.image_offer
@@ -65,5 +64,17 @@ resource "azurerm_virtual_machine" "common" {
 
   os_profile_linux_config {
     disable_password_authentication = false
+
+    ssh_keys {
+      path = "/home/${var.username}/.ssh/authorized_keys"
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
+  }
+
+  connection {
+    type     = "ssh"
+    user     = var.username
+    password = var.pwd
+    host     = element(azurerm_public_ip.common[*].ip_address, count.index)
   }
 }

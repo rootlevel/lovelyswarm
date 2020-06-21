@@ -65,19 +65,31 @@ resource "azurerm_virtual_machine" "common" {
 
   os_profile_linux_config {
     disable_password_authentication = false
+
+    ssh_keys {
+      path = "/home/${var.username}/.ssh/authorized_keys"
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
+  }
+
+  connection {
+    type     = "ssh"
+    user     = var.username
+    password = var.pwd
+    host     = element(azurerm_public_ip.common[*].ip_address, count.index)
   }
 
   # For sync time in all hosts (legacy!)
-  provisioner "file" {
-    source      = "config/ntp.conf"
-    destination = "/tmp/ntp.conf"
-
-    connection {
-      type     = "ssh"
-      user     = var.username
-      password = var.pwd
-      host     = element(azurerm_public_ip.common[*].ip_address, count.index)
-    }
-  }
+//  provisioner "file" {
+//    source      = "config/ntp.conf"
+//    destination = "/tmp/ntp.conf"
+//
+//    connection {
+//      type     = "ssh"
+//      user     = var.username
+//      password = var.pwd
+//      host     = element(azurerm_public_ip.common[*].ip_address, count.index)
+//    }
+//  }
 
 }
