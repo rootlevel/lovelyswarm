@@ -1,0 +1,5 @@
+[managers]
+manager_vm-dev-deployman-manager-counter0 ansible_port=22 ansible_host=52.136.252.156
+
+[workers]
+worker_vm-dev-deployman-worker-counter0 ansible_port=22 ansible_host=23.101.73.100

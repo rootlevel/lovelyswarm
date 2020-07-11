@@ -1,13 +1,13 @@
 variable "username" {
-  default = "noname"
+  default = "defimova"
 }
 
 variable "product_name" {
-  default = "noname"
+  default = "lrepo"
 }
 
 variable "count_managers" {
-  default = 1
+  default = 0
 }
 
 variable "count_workers" {
@@ -15,7 +15,7 @@ variable "count_workers" {
 }
 
 variable "tag" {
-  default = "noname"
+  default = ""
 }
 
 variable "vm_size" {
@@ -27,15 +27,15 @@ variable "location" {
 }
 
 variable "image_sku" {
-  default     = "18.04-LTS"
+  default     = "7.5"
 }
 
 variable "image_offer" {
-  default     = "UbuntuServer"
+  default     = "CentOS"
 }
 
 variable "image_publisher" {
-  default     = "Canonical"
+  default     = "OpenLogic"
 }
 
 variable "ssh_port" {

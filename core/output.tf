@@ -8,6 +8,7 @@ output "manager_username" {
 
 output "manager_passwd" {
   value = module.manager.manager_passwd
+  sensitive = true
 }
 
 output "worker_ips" {
@@ -20,4 +21,5 @@ output "worker_username" {
 
 output "worker_passwd" {
   value = module.worker.worker_passwd
+  sensitive = true
 }

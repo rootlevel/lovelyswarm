@@ -1,12 +1,14 @@
 # idea
 .idea
 
-# Credentials
+# Credentials for azure
 core/init.sh
 
 # Plans
 core/*.plan
 
+# Vault password
+vault-password.txt
 
 # Local .terraform directories
 **/.terraform/*

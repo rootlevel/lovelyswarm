@@ -1,6 +1,6 @@
 locals {
   vnet_address_prefix   = "10.0.0.0/16"
-  subnet_address_prefix = "10.0.0.0/24"
+  subnet_address_prefix = ["10.0.0.0/24"]
   tags = {"indicate" = "${var.tag}"}
 }
 
@@ -46,16 +46,17 @@ resource "azurerm_subnet" "common" {
  name                 = "snet-dev-${var.product_name}-${var.username}"
  resource_group_name  = azurerm_resource_group.common.name
  virtual_network_name = azurerm_virtual_network.common.name
- address_prefix       = local.subnet_address_prefix
+ address_prefixes      = local.subnet_address_prefix
 }
 
+
 resource "azurerm_network_security_group" "common" {
-  name                         = "nsg-dev-${var.product_name}-${var.username}"
-  location                     = azurerm_resource_group.common.location
+  name                         = "nsg-${var.product_name}-${var.username}"
+  location                     = var.location
   resource_group_name          = azurerm_resource_group.common.name
 
   security_rule {
-    name                       = "Port_HOME_IN"
+    name                       = "Port_OFFICE_IN"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -67,7 +68,7 @@ resource "azurerm_network_security_group" "common" {
   }
 
   security_rule {
-    name                       = "Port_HOME_OUT"
+    name                       = "Port_OFFICE_OUT"
     priority                   = 100
     direction                  = "Outbound"
     access                     = "Allow"
@@ -83,7 +84,7 @@ resource "azurerm_network_security_group" "common" {
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "common" {
+resource "azurerm_subnet_network_security_group_association" "manager_common" {
   subnet_id                 = azurerm_subnet.common.id
   network_security_group_id = azurerm_network_security_group.common.id
 }
@@ -101,57 +102,30 @@ resource "azurerm_storage_account" "diagnostics" {
 
 #--- Importing module with VM creation ---
 
-data "template_file" "client_config" {
-  template = "${file("${path.module}/config/cloudconfig.yml.tpl")}"
-}
-
-data "template_cloudinit_config" "config" {
-  gzip          = true
-  base64_encode = true
-
-  # Main cloud-config configuration file.
-  part {
-    filename     = "cloudconfig.yml.tpl"
-    content_type = "text/cloud-config"
-    content      = "${data.template_file.client_config.rendered}"
-  }
-
-  part {
-    content_type = "text/x-shellscript"
-    content      = "baz"
-  }
-
-  part {
-    content_type = "text/x-shellscript"
-    content      = "ffbaz"
-  }
-}
-
 module "manager" {
   source = "./manager"
 
   name                = "manager-${var.product_name}-${var.username}"
-  count_managers      = "${var.count_managers}"
+  count_managers      = var.count_managers
 
-  vm_size             = "${var.vm_size}"
-  image_sku           = "${var.image_sku}"
-  image_offer         = "${var.image_offer}"
-  image_publisher     = "${var.image_publisher}"
+  vm_size             = var.vm_size
+  image_sku           = var.image_sku
+  image_offer         = var.image_offer
+  image_publisher     = var.image_publisher
 
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.common.name}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.common.name
 
-  username            = "${var.username}"
-  pwd                 = "${random_string.password.result}"
-  ssh_key             = "${var.ssh_key}"
-  ssh_port            = "${var.ssh_port}"
+  username            = var.username
+  pwd                 = random_string.password.result
+  ssh_key             = var.ssh_key
+  ssh_port            = var.ssh_port
 
-  availability_set_id = "${azurerm_availability_set.common.id}"
+  availability_set_id = azurerm_availability_set.common.id
 
-  subnet_id           = "${azurerm_subnet.common.id}"
-  storage_type        = "${var.storage_type}"
-  tags                = "${local.tags}"
-  cloud_config        = "${base64encode(data.template_file.client_config.rendered)}"
+  subnet_id           = azurerm_subnet.common.id
+  storage_type        = var.storage_type
+  tags                = local.tags
 }
 
 
@@ -160,40 +134,60 @@ module "worker" {
   source = "./worker"
 
   name                = "worker-${var.product_name}-${var.username}"
-  count_managers      = "${var.count_workers}"
+  count_managers      = var.count_workers
 
-  vm_size             = "${var.vm_size}"
-  image_sku           = "${var.image_sku}"
-  image_offer         = "${var.image_offer}"
-  image_publisher     = "${var.image_publisher}"
+  vm_size             = var.vm_size
+  image_sku           = var.image_sku
+  image_offer         = var.image_offer
+  image_publisher     = var.image_publisher
 
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.common.name}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.common.name
 
-  username            = "${var.username}"
-  pwd                 = "${random_string.password.result}"
-  ssh_key             = "${var.ssh_key}"
-  ssh_port            = "${var.ssh_port}"
+  username            = var.username
+  pwd                 = random_string.password.result
+  ssh_key             = var.ssh_key
+  ssh_port            = var.ssh_port
 
-  availability_set_id = "${azurerm_availability_set.common.id}"
+  availability_set_id = azurerm_availability_set.common.id
 
-  subnet_id           = "${azurerm_subnet.common.id}"
-  storage_type        = "${var.storage_type}"
-  tags                = "${local.tags}"
-  cloud_config        = "${base64encode(data.template_file.client_config.rendered)}"
+  subnet_id           = azurerm_subnet.common.id
+  storage_type        = var.storage_type
+  tags                = local.tags
 }
 
 
 data "template_file" "inventory" {
-  template = "${file("config/inventory.yml.tpl")}"
-
+  template = file("config/inventory.yml.tpl")
 
   vars = {
-    managers = "${join("\n", module.manager.manager_ips)}"
-    workers  = "${join("\n", module.worker.worker_ips)}"
+    managers = join("\n", formatlist("manager_%s ansible_port=22 ansible_host=%s", module.manager.manager_host, module.manager.manager_ips))
+    workers  = join("\n", formatlist("worker_%s ansible_port=22 ansible_host=%s", module.worker.worker_host, module.worker.worker_ips))
   }
 }
 
+resource "local_file" "hosts" {
+  content  = data.template_file.inventory.rendered
+  filename = "../playbooks/hosts"
+}
+
+data "template_file" "vault" {
+  template = file("config/vault.yml.tpl")
+
+  vars = {
+    vm_managers_become_password = join("\n", formatlist("vault_ssh_manager=%s", module.manager.manager_passwd))
+    vm_workers_become_password = join("\n", formatlist("vault_ssh_worker=%s", module.worker.worker_passwd))
+  }
+}
+
+resource "local_file" "vault" {
+  content  = data.template_file.vault.rendered
+  filename = "../playbooks/vault.yml"
+
+  provisioner "local-exec" {
+    command="ansible-vault encrypt ../playbooks/vault.yml --vault-password-file=../vault-password.txt"
+  }
+}
 
 
 
