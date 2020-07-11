@@ -168,9 +168,26 @@ data "template_file" "inventory" {
 
 resource "local_file" "hosts" {
   content  = data.template_file.inventory.rendered
-  filename = "host.cfg"
+  filename = "../playbooks/hosts"
 }
 
+data "template_file" "vault" {
+  template = file("config/vault.yml.tpl")
+
+  vars = {
+    vm_managers_become_password = join("\n", formatlist("vault_ssh_manager=%s", module.manager.manager_passwd))
+    vm_workers_become_password = join("\n", formatlist("vault_ssh_worker=%s", module.worker.worker_passwd))
+  }
+}
+
+resource "local_file" "vault" {
+  content  = data.template_file.vault.rendered
+  filename = "../playbooks/vault.yml"
+
+  provisioner "local-exec" {
+    command="ansible-vault encrypt ../playbooks/vault.yml --vault-password-file=../vault-password.txt"
+  }
+}
 
 
 
